@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>赣南师范大学 · 校园通行车票（NFC版）</title>
+    <style>
+        /* ========== 全部样式内嵌，确保手机正常显示 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6d9 100%);
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, sans-serif;
+            padding: 24px 16px 40px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .badge {
+            background: rgba(45, 106, 79, 0.15);
+            backdrop-filter: blur(4px);
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 13px;
+            color: #2d6a4f;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1b4332;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .sub {
+            color: #40916c;
+            font-size: 14px;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1b4332;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 4px solid #2d6a4f;
+            padding-left: 12px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #2d6a4f;
+            margin-bottom: 6px;
+        }
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid rgba(45, 106, 79, 0.2);
+            border-radius: 20px;
+            font-size: 15px;
+            background: white;
+            transition: all 0.2s;
+            outline: none;
+        }
+        input:focus {
+            border-color: #2d6a4f;
+            box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+        }
+
+        .btn, .btn-outline {
+            width: 100%;
+            padding: 14px 16px;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .btn {
+            background: #2d6a4f;
+            color: white;
+        }
+        .btn:hover {
+            background: #1b4332;
+            transform: scale(1.02);
+            box-shadow: 0 6px 14px rgba(27, 67, 50, 0.25);
+        }
+        .btn-outline {
+            background: rgba(45, 106, 79, 0.1);
+            color: #2d6a4f;
+            border: 1px solid rgba(45, 106, 79, 0.3);
+        }
+        .btn-outline:hover {
+            background: #2d6a4f;
+            color: white;
+            transform: scale(1.02);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .grid-2 .btn-outline {
+            margin-top: 0;
+        }
+
+        .info-box {
+            background: rgba(45, 106, 79, 0.08);
+            border-radius: 20px;
+            padding: 14px;
+            margin: 12px 0;
+            font-size: 14px;
+            color: #2d6a4f;
+            text-align: center;
+        }
+        .hint {
+            background: #e8f5e9;
+            font-size: 13px;
+        }
+
+        .modal, .wechat-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content, .wechat-modal-content {
+            background: white;
+            border-radius: 32px;
+            max-width: 90%;
+            max-height: 85%;
+            overflow-y: auto;
+            padding: 20px;
+            animation: fadeInUp 0.25s ease;
+        }
+        .wechat-modal-content {
+            width: 85%;
+            max-width: 340px;
+            text-align: center;
+        }
+        .modal-content img {
+            width: 100%;
+            border-radius: 16px;
+        }
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            background: rgba(0,0,0,0.5);
+            width: 40px;
+            height: 40px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .contacts-list {
+            list-style: none;
+            padding: 0;
+        }
+        .contacts-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .contact-name {
+            font-weight: 600;
+            color: #1b4332;
+        }
+        .contact-phone {
+            color: #2d6a4f;
+            font-family: monospace;
+            font-size: 14px;
+            background: #e8f5e9;
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .contact-phone:hover {
+            background: #2d6a4f;
+            color: white;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #52796f;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="badge">🎓 Gannan Normal University</div>
+        <h1>🎫 校园通行车票</h1>
+        <div class="sub">NFC碰一碰 · 加好友 · 支付</div>
+    </div>
+
+    <!-- 校园网登录 -->
+    <div class="card">
+        <div class="card-title">校园网一键登录</div>
+        <div class="input-group">
+            <label>学号</label>
+            <input type="text" id="username" placeholder="输入学号">
+        </div>
+        <div class="input-group">
+            <label>密码</label>
+            <input type="password" id="password" placeholder="输入密码">
+        </div>
+        <button class="btn" onclick="saveAndLogin()">🔌 保存并自动登录</button>
+    </div>
+
+    <!-- 碰一碰加好友（保留原有按钮，不补全功能） -->
+    <div class="card">
+        <div class="card-title">碰一碰加好友</div>
+        <button class="btn-outline" onclick="openWechatSetup()">💾 存入我的微信名片</button>
+    </div>
+
+    <!-- 碰一碰支付（保留按钮，移除报错） -->
+    <div class="card">
+        <div class="card-title">碰一碰支付</div>
+        <button class="btn-outline" onclick="bindAlipay()">🔗 绑定支付宝（碰一碰支付）</button>
+    </div>
+
+    <!-- 常用系统 -->
+    <div class="card">
+        <div class="card-title">常用系统</div>
+        <div class="grid-2">
+            <button class="btn-outline" onclick="window.open('https://www.gnnu.edu.cn')">🏫 学校官网</button>
+            <button class="btn-outline" onclick="window.open('https://office.chaoxing.com/front/third/apps/seat/index?wfw_token=hejVCgwTrXI2Tp6Kuj7DC&fidEnc=3fb13bf8c4950ec5&uid=342272015&wfwEnc=65E50F0AD0C909C6C80B396884BE3C16&wxAppid=wxc93f4f5f6b0f4183&mappId=7990390&code=ZcLNATHf&state=30013')">📚 图书馆预约</button>
+            <button class="btn-outline" onclick="window.open('wanxiao://')">⚡ 电费查询</button>
+            <button class="btn-outline" onclick="window.open('http://gnnuhwr.cloud:83/')">🛠️ 寝室报修</button>
+            <button class="btn-outline" onclick="window.open('https://m.59wanmei.com/calendar/calendar/index.html')">📅 学校校历</button>
+        </div>
+    </div>
+
+    <!-- 其他服务 -->
+    <div class="card">
+        <div class="card-title">其他服务</div>
+        <div class="grid-2">
+            <button class="btn-outline" onclick="openContacts()">📞 校园通讯录</button>
+            <button class="btn-outline" onclick="window.open('https://www.bilibili.com/opus/1202110717132537888?plat_id=186&share_from=dynamic&share_medium=android&share_plat=android&share_session_id=abe7620c-411b-423e-9e0c-899436a19494&share_source=WEIXIN&share_tag=s_i&spmid=dt.opus-detail.0.0&timestamp=1778734136&unique_k=y6jMIcT')">🗺️ 校园地图</button>            <button class="btn-outline" onclick="window.open('https://www.bilibili.com/video/BV1AQ5S6QERq/')">校园网连接教程</button>
+        </div>
+    </div>
+
+    <div class="footer">© 赣南师范大学 · NFC校园一卡通 | 碰一碰加好友 · 碰一碰支付</div>
+</div>
+
+<!-- 校园地图弹窗（改用内嵌 SVG 占位图，不再依赖外部图片） -->
+<div id="mapModal" class="modal">
+    <span class="close-btn" onclick="closeMap()">✕</span>
+    <div class="modal-content">
+        <img id="campusMapImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23e8f5e9'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='%232d6a4f' text-anchor='middle' dy='.3em'%3E赣南师范大学校园地图%3C/text%3E%3C/svg%3E" alt="校园地图">
+    </div>
+</div>
+
+<!-- 校园通讯录弹窗 -->
+<div id="contactsModal" class="modal">
+    <span class="close-btn" onclick="closeContacts()">✕</span>
+    <div class="modal-content">
+        <h3>📞 赣南师范大学 校园通讯录</h3>
+        <ul class="contacts-list">
+            <li><span class="contact-name">教务处</span><span class="contact-phone" onclick="callPhone('0797-8898687')">0797-8898687</span></li>
+            <li><span class="contact-name">学生资助管理中心</span><span class="contact-phone" onclick="callPhone('0797-8898686')">0797-8898686</span></li>
+            <li><span class="contact-name">学生公寓管理中心</span><span class="contact-phone" onclick="callPhone('0797-8898640')">0797-8898640</span></li>
+            <li><span class="contact-name">保卫处</span><span class="contact-phone" onclick="callPhone('0797-8898682')">0797-8898682</span></li>
+            <li><span class="contact-name">校医院</span><span class="contact-phone" onclick="callPhone('0797-8898680')">0797-8898680</span></li>
+            <li><span class="contact-name">校医院（急诊）</span><span class="contact-phone" onclick="callPhone('0797-8898698')">0797-8898698</span></li>
+            <li><span class="contact-name">西苑1-9栋 送水</span><span class="contact-phone" onclick="callPhone('181107976027')">181107976027</span></li>
+            <li><span class="contact-name">西苑10-15栋/南苑 送水</span><span class="contact-phone" onclick="callPhone('181107976025')">181107976025</span></li>
+            <li><span class="contact-name">北苑 送水</span><span class="contact-phone" onclick="callPhone('181107976019')">181107976019</span></li>
+            <li><span class="contact-name">校园卡/宿舍网络办理</span><span class="contact-phone" onclick="callPhone('178898357269')">178898357269</span></li>
+        </ul>
+    </div>
+</div>
+
+<!-- 微信存入弹窗 -->
+<div id="wechatModal" class="wechat-modal">
+    <div class="wechat-modal-content">
+        <h3>💾 存入我的微信名片</h3>
+        <input type="text" id="wechatLink" placeholder="粘贴你的微信号或微信个人链接">
+        <button class="btn" onclick="saveMyWechat()">保存到浏览器</button>
+    </div>
+</div>
+
+<script>
+    // ========= 校园网登录 =========
+    function saveAndLogin() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        if (username && password) {
+            localStorage.setItem('gnnu_username', username);
+            localStorage.setItem('gnnu_password', password);
+            window.location.href = 'http://10.10.90.2?username=' + encodeURIComponent(username) + '&password=' + encodeURIComponent(password);
+        } else {
+            alert('请输入学号和密码');
+        }
+    }
+
+    // ========= 微信名片逻辑（仅保留原有保存功能，无写入NFC） =========
+    function getMyWechat() {
+        return localStorage.getItem('my_wechat_info') || null;
+    }
+
+    function saveMyWechat() {
+        const link = document.getElementById('wechatLink').value.trim();
+        if (link) {
+            localStorage.setItem('my_wechat_info', link);
+            document.getElementById('wechatModal').style.display = 'none';
+            // 原有的 updateWechatDisplay 会报错（因为 myWechatInfo 元素不存在），这里直接 alert 提示即可
+            alert('✅ 微信名片已保存');
+        } else {
+            alert('请输入微信号');
+        }
+    }
+
+    function openWechatSetup() {
+        document.getElementById('wechatModal').style.display = 'flex';
+    }
+
+    // ========= 支付宝碰一碰支付（移除报错代码） =========
+    function bindAlipay() {
+        window.open('alipays://platformapi/startapp?appId=2021001169649075&page=pages/nfc/bind');
+        // 注释掉操作不存在元素的代码，避免报错
+        // localStorage.setItem('alipay_nfc_bound', 'true');
+        // document.getElementById('alipayBindStatus').innerHTML = '✅ 已绑定支付宝（待写入卡片）';
+        alert('请在支付宝完成授权（如果已安装支付宝）');
+    }
+
+    // ========= 状态初始化 =========
+    window.onload = function() {
+        const username = localStorage.getItem('gnnu_username');
+        const password = localStorage.getItem('gnnu_password');
+        if (username) document.getElementById('username').value = username;
+        if (password) document.getElementById('password').value = password;
+        // 移除支付宝状态操作，避免报错
+    };
+
+    // ========= 校园地图（已用内嵌SVG，无需外部图片） =========
+    function openMap() {
+        document.getElementById('mapModal').style.display = 'flex';
+    }
+    function closeMap() {
+        document.getElementById('mapModal').style.display = 'none';
+    }
+
+    // ========= 通讯录 =========
+    function openContacts() {
+        document.getElementById('contactsModal').style.display = 'flex';
+    }
+    function closeContacts() {
+        document.getElementById('contactsModal').style.display = 'none';
+    }
+    function callPhone(phone) {
+        if (confirm(`拨打 ${phone} ？`)) {
+            window.location.href = `tel:${phone}`;
+        }
+    }
+
+    // 关闭弹窗（点击背景）
+    window.onclick = function(e) {
+        const mapModal = document.getElementById('mapModal');
+        const contactsModal = document.getElementById('contactsModal');
+        const wechatModal = document.getElementById('wechatModal');
+        if (e.target === mapModal) closeMap();
+        if (e.target === contactsModal) closeContacts();
+        if (e.target === wechatModal) wechatModal.style.display = 'none';
+    };
+</script>
+</body>
+</html>
